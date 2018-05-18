@@ -14,12 +14,12 @@ class Hedgerow
 
     def lock(name, timeout)
       validate_name!(name)
-      parse_response connection.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout)
+      parse_response connection.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout, as: :array)
     end
 
     def release(name)
       validate_name!(name)
-      parse_response connection.prepare("SELECT RELEASE_LOCK(?)").execute(name)
+      parse_response connection.prepare("SELECT RELEASE_LOCK(?)").execute(name, as: :array)
     end
 
     def validate_name!(name)
@@ -29,13 +29,7 @@ class Hedgerow
     end
 
     def parse_response(r)
-      if defined?(ActiveRecord::Base) && connection.class == ActiveRecord::Base
-        val = r.to_a.flatten.first
-      elsif defined?(Mysql2::Client) && connection.class == Mysql2::Client
-        val = r.to_a.first.values.first
-      else
-        raise "Cannot find response parsing scheme."
-      end
+      val = r.to_a.flatten.first rescue 0
       val == 1 ? true : false
     end
 
