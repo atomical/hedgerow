@@ -14,12 +14,12 @@ class Hedgerow
 
     def lock(name, timeout)
       validate_name!(name)
-      parse_response connection.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout, as: :array)
+      parse_response connection.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout)
     end
 
     def release(name)
       validate_name!(name)
-      parse_response connection.prepare("SELECT RELEASE_LOCK(?)").execute(name, as: :array)
+      parse_response connection.prepare("SELECT RELEASE_LOCK(?)").execute(name)
     end
 
     def validate_name!(name)
