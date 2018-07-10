@@ -14,12 +14,16 @@ class Hedgerow
 
     def lock(name, timeout)
       validate_name!(name)
-      parse_response connection.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout)
+      connection do |c|
+        parse_response c.prepare("SELECT GET_LOCK(?, ?)").execute(name, timeout)
+      end
     end
 
     def release(name)
       validate_name!(name)
-      parse_response connection.prepare("SELECT RELEASE_LOCK(?)").execute(name)
+      connection do |c|
+        parse_response c.prepare("SELECT RELEASE_LOCK(?)").execute(name)
+      end
     end
 
     def validate_name!(name)
@@ -38,12 +42,14 @@ class Hedgerow
     end
 
     def connection
-      @@connection ||= begin
-        if defined?(ActiveRecord)
-          ActiveRecord::Base.connection.raw_connection
-        else
-          raise "Could not find connection for hedgerow."
+      if defined?(ActiveRecord)
+        ActiveRecord::Base.connection_pool.with_connection do |connection|
+          yield connection.raw_connection
         end
+      elsif @@connection
+        yield @@connection
+      else
+        raise "Could not find connection for hedgerow."
       end
     end
   end
